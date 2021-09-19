@@ -9,3 +9,7 @@ build
 htmlcov
 
 venv/
+
+.env
+.env.prod
+db.sqlite3

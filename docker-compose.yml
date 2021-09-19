@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+  memento_api:
+    build: .
+    ports:
+      - 19550:8000
+    environment:
+      DJANGO_SETTINGS_MODULE: "mementoapi.settings"
+    volumes:
+      - ${PWD}/prod.sqlite3:/code/prod.sqlite3
