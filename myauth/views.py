@@ -1,18 +1,24 @@
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from rest_framework import status, exceptions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.tokens import SlidingToken
 
 from myauth.models import User
 
-from .serializers import AuthenticationResponseSerializer, AuthenticationSerializer
+from .serializers import AuthenticationResponseSerializer, AuthenticationSerializer, ChangePasswordSerializer
 
 
 class AuthenticationViewSet(GenericViewSet):
-    serializer_class = AuthenticationSerializer
+
+    def get_serializer_class(self):
+        if self.action == "login_or_signup":
+            return AuthenticationSerializer
+        elif self.action == "change_password":
+            return ChangePasswordSerializer
 
     @action(detail=False, methods=["POST"])
     def login_or_signup(self, request):
@@ -43,3 +49,21 @@ class AuthenticationViewSet(GenericViewSet):
         response_serializer = AuthenticationResponseSerializer(instance=response_data)
 
         return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["POST"])
+    @permission_classes((IsAuthenticated,))
+    def change_password(self, request):
+        serializer = self.get_serializer_class()(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+
+        current_password = serializer.validated_data.get("currentPassword")
+        new_password = serializer.validated_data.get("newPassword")
+
+        if not request.user.check_password(current_password):
+            raise ValidationError("Invalid password")
+
+        request.user.set_password(new_password)
+        request.user.save()
+
+        return Response(status=status.HTTP_200_OK)

@@ -9,3 +9,8 @@ class AuthenticationSerializer(serializers.Serializer):
 class AuthenticationResponseSerializer(serializers.Serializer):
     username = serializers.CharField()
     token = serializers.CharField()
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    currentPassword = serializers.CharField()
+    newPassword = serializers.CharField()
